@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.kanchingyg/env-phantom",
+  "description": "Zero-knowledge .env proxy: phantom tokens for agents, real secrets injected at TLS edge only",
+  "repository": {
+    "url": "https://github.com/kanchingyg/env-phantom",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "env-phantom",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
