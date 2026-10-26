@@ -45,7 +45,7 @@ export async function cmdMask(argv: string[], cwd: string): Promise<number> {
   const allowWrite = argv.includes("--allow-write");
   const isDry = argv.includes("--dry-run");
   const file = argv.find((a) => !a.startsWith("--")) ?? ".env";
-  const path = join(cwd, file);
+  const path = assertPathContained(file, cwd);
   if (!existsSync(path)) {
     process.stderr.write(`Missing env file: ${file}\n`);
     return 2;

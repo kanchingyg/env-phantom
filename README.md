@@ -6,10 +6,6 @@
 [![JSR Score](https://jsr.io/badges/@kanchingyg/env-phantom/score)](https://jsr.io/@kanchingyg/env-phantom/score)
 [![Runtime](https://img.shields.io/badge/runtime-Node_%7C_Bun_%7C_Deno-f9f1e1)](https://github.com/kanchingyg/env-phantom)
 [![license](https://img.shields.io/github/license/kanchingyg/env-phantom)](https://github.com/kanchingyg/env-phantom/blob/HEAD/LICENSE)
-[![npm](https://img.shields.io/npm/v/env-phantom)](https://www.npmjs.com/package/env-phantom)
-[![JSR](https://jsr.io/badges/@kanchingyg/env-phantom)](https://jsr.io/@kanchingyg/env-phantom)
-[![Bun](https://img.shields.io/badge/runtime-Node_%7C_Bun-f9f1e1)](https://github.com/kanchingyg/env-phantom)
-[![license](https://img.shields.io/github/license/kanchingyg/env-phantom)](https://github.com/kanchingyg/env-phantom/blob/HEAD/LICENSE)
 
 **One line:** `npx env-phantom mask .env --allow-write && npx env-phantom run -- node app.js`
 
@@ -48,21 +44,6 @@ npx jsr add @kanchingyg/env-phantom
 | `audit` | Print blocked exfiltration attempts |
 | `--mcp` | Start MCP server over stdio |
 
-## MCP setup
-
-Add to `.cursor/mcp.json` or Claude Code MCP config:
-
-```json
-{
-  "mcpServers": {
-    "env-phantom": {
-      "command": "npx",
-      "args": ["-y", "env-phantom", "--mcp"]
-    }
-  }
-}
-```
-
 ## Ollama (optional)
 
 For `explain_exfil_attempt`, run Ollama on port `11434`. Cloud OpenAI-compatible endpoints used for embeddings can sit behind the same phantom vault pattern via `HTTP_PROXY`.
@@ -71,10 +52,11 @@ For `explain_exfil_attempt`, run Ollama on port `11434`. Cloud OpenAI-compatible
 
 | Tool | Mutates | Description |
 | --- | --- | --- |
-| `mask_dotenv_file` | `true` | Replace plaintext values in `.env` with format-preserving `phantom_*` tokens and store encrypted values in the AES-256-GCM vault (backups `.env.bak` first; requires `--allow-write`). |
-| `list_masked_keys` | `false` | List environment variable keys tracked in the local phantom vault without exposing secret values. |
-| `audit_exfil_attempts` | `false` | Return blocked outbound HTTP/HTTPS requests where a non-allowlisted host attempted to read a `phantom_*` token. |
-| `explain_exfil_attempt` | `false` | Summarize a blocked exfiltration event using a local Ollama or OpenAI-compatible endpoint. |
+| `list_phantom_keys` | `false` | List phantom env keys and merged allowlisted hosts (no secret values). |
+| `run_sandboxed` | `true` | Run `argv` under phantom env + edge proxy (`--allow-write`; optional `cwd` under sandbox root). |
+| `explain_exfil_attempt` | `false` | Summarize a blocked exfiltration log entry (`logId`; optional local `model`). |
+
+Masking `.env` is CLI-only (`mask`); use `npx env-phantom audit` for blocked outbound attempts.
 
 ## Editor and Agent Integration
 
@@ -105,11 +87,11 @@ import * as bridge from "jsr:@kanchingyg/env-phantom/bridge";
 
 ## Runtime Safety and Guardrails
 
-- **Stdio frame isolation**: When `--mcp` is active, `hijackStdoutForMcp()` redirects accidental `console.log` calls to `stderr` so JSON-RPC 2.0 frames on `stdout` never corrupt.
-- **Read-only by default**: Mutating tools (`mutates: true`) are blocked in `--dry-run` mode and require explicit `--allow-write` authorization.
-- **Loop breaker**: Repeated identical `(toolName, args)` invocations are hashed with SHA-256 and halted after 3 consecutive repeats to prevent runaway agent loops.
-- **Context budget truncation**: Tool outputs are middle-truncated (`60%` head / `40%` tail) scaled to the probed local model `n_ctx` (Ollama `/api/show`, llama.cpp `/props`, vLLM `/v1/models`).
-- **Secret redaction and path normalization**: AWS keys (`AKIA*`, `ASIA*`), bearer tokens, and `sk-*` keys are scrubbed before returning tool output, and Windows drive paths (`C:\...`) translate cleanly to `/mnt/c/...` when WSL mode is enabled.
+- **Stdio frame isolation**: `--mcp` keeps JSON-RPC on `stdout` clean (logs go to `stderr`).
+- **Read-only default**: `run_sandboxed` needs `--allow-write`; `--dry-run` blocks mutating tools.
+- **Loop breaker**: Identical MCP tool calls halt after three repeats.
+- **Path containment**: `mask` and MCP `cwd` must stay under the process working directory.
+- **Edge proxy**: Non-allowlisted hosts get `403` when a request carries a phantom token.
 
 ## License
 
