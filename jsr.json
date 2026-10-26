@@ -1,0 +1,23 @@
+{
+  "name": "@kanchingyg/env-phantom",
+  "version": "0.1.1",
+  "description": "Zero-knowledge .env proxy: phantom tokens in process.env, real secrets only at TLS edge for allowlisted hosts",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/bridge.ts",
+    "./bridge": "./src/bridge.ts"
+  },
+  "publish": {
+    "include": [
+      "src/**/*.ts",
+      "LICENSE",
+      "README.md",
+      "SKILL.md",
+      "jsr.json"
+    ],
+    "exclude": [
+      "src/**/*.test.ts",
+      "src/**/*.spec.ts"
+    ]
+  }
+}

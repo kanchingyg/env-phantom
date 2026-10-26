@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env-phantom-vault.json
+.env-phantom-ca.pem
+.env.bak
+.env-phantom/
+*.log
